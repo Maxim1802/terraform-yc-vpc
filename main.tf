@@ -52,14 +52,14 @@ resource "yandex_vpc_subnet" "private" {
 }
 
 resource "yandex_vpc_subnet" "infra" {
-  for_each       = try({ for v in var.private_subnets : v.v4_cidr_blocks[0] => v }, {})
+  for_each       = try({ for v in var.infra_subnets : v.v4_cidr_blocks[0] => v }, {})
   name           = try(each.value.name, "infra-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}")
   description    = try(each.value.description, "${var.network_name} subnet for zone ${each.value.zone}")
   v4_cidr_blocks = each.value.v4_cidr_blocks
   zone           = each.value.zone
   network_id     = local.vpc_id
   folder_id      = lookup(each.value, "folder_id", local.folder_id)
-  route_table_id = try(yandex_vpc_route_table.private[0].id, null)
+  route_table_id = try(yandex_vpc_route_table.infra[0].id, null)
   dhcp_options {
     domain_name         = var.domain_name == null ? "internal." : var.domain_name
     domain_name_servers = var.domain_name_servers == null ? [cidrhost(each.value.v4_cidr_blocks[0], 2)] : var.domain_name_servers
@@ -112,13 +112,13 @@ resource "yandex_vpc_route_table" "private" {
   }
 }
 
-resource "yandex_vpc_route_table" "private" {
-  count      = var.private_subnets == null ? 0 : 1
+resource "yandex_vpc_route_table" "infra" {
+  count      = var.infra_subnets == null ? 0 : 1
   name       = try(each.value.name, "${var.network_name}-infra")
   network_id = local.vpc_id
 
   dynamic "static_route" {
-    for_each = var.routes_private_subnets == null ? [] : var.routes_private_subnets
+    for_each = var.routes_infra_subnets == null ? [] : var.routes_infra_subnets
     content {
       destination_prefix = static_route.value["destination_prefix"]
       next_hop_address   = static_route.value["next_hop_address"]

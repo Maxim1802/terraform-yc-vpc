@@ -72,6 +72,25 @@ variable "private_subnets" {
   default     = null
 }
 
+variable "infra_subnets" {
+  description = <<EOF
+  "Describe your infra subnet preferences. For VMs without public IPs but with or without NAT gateway. For Multi-Folder VPC add folder_id to subnet object"
+  infra_subnets = [
+  {
+    "v4_cidr_blocks" : ["10.221.0.0/16"],
+    "zone" : "ru-central1-a"
+  },
+  {
+    "v4_cidr_blocks" : ["10.231.0.0/16"],
+    "zone" : "ru-central1-b"
+    "folder_id" : "xxxxxxx" # For Multi-Folder VPC
+  },
+  ]
+  EOF
+  type        = any
+  default     = null
+}
+
 variable "create_nat_gw" {
   description = "Create a NAT gateway for internet access from private subnets"
   type        = bool
@@ -87,6 +106,14 @@ variable "routes_public_subnets" {
   default = null
 }
 variable "routes_private_subnets" {
+  description = "Describe your route preferences for public subnets"
+  type = list(object({
+    destination_prefix = string
+    next_hop_address   = string
+  }))
+  default = null
+}
+variable "routes_infra_subnets" {
   description = "Describe your route preferences for public subnets"
   type = list(object({
     destination_prefix = string
