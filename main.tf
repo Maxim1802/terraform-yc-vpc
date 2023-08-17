@@ -19,8 +19,10 @@ resource "yandex_vpc_network" "this" {
 resource "yandex_vpc_subnet" "public" {
   for_each       = try({ for v in var.public_subnets : v.v4_cidr_blocks[0] => v }, {})
   #name           = "public-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}"
-  name           = each.value.name #!= "" ? each.value.name : "public-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}"
-  description    = each.value.description #!= "" ? each.value.description : "${var.network_name} subnet for zone ${each.value.zone}"
+  #name           = each.value.name #!= "" ? each.value.name : "public-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}"
+  #description    = each.value.description #!= "" ? each.value.description : "${var.network_name} subnet for zone ${each.value.zone}"
+  name           = lookup(each.value, "name", "public-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}")
+  description    = lookup(each.value, "description", "${var.network_name} subnet for zone ${each.value.zone}")
   v4_cidr_blocks = each.value.v4_cidr_blocks
   zone           = each.value.zone
   network_id     = local.vpc_id
@@ -36,8 +38,10 @@ resource "yandex_vpc_subnet" "public" {
 
 resource "yandex_vpc_subnet" "private" {
   for_each       = try({ for v in var.private_subnets : v.v4_cidr_blocks[0] => v }, {})
-  name           = each.value.name #!= "" ? each.value.name : "private-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}"
-  description    = each.value.description #!= "" ? each.value.description : "${var.network_name} subnet for zone ${each.value.zone}"
+  #name           = each.value.name #!= "" ? each.value.name : "private-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}"
+  #description    = each.value.description #!= "" ? each.value.description : "${var.network_name} subnet for zone ${each.value.zone}"
+  name           = lookup(each.value, "name", "private-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}")
+  description    = lookup(each.value, "description", "${var.network_name} subnet for zone ${each.value.zone}")  
   v4_cidr_blocks = each.value.v4_cidr_blocks
   zone           = each.value.zone
   network_id     = local.vpc_id
@@ -53,8 +57,10 @@ resource "yandex_vpc_subnet" "private" {
 
 resource "yandex_vpc_subnet" "infra" {
   for_each       = try({ for v in var.infra_subnets : v.v4_cidr_blocks[0] => v }, {})
-  name           = each.value.name #!= "" ? each.value.name : "infra-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}"
-  description    = each.value.description #!= "" ? each.value.description : "${var.network_name} subnet for zone ${each.value.zone}"
+  #name           = each.value.name #!= "" ? each.value.name : "infra-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}"
+  #description    = each.value.description #!= "" ? each.value.description : "${var.network_name} subnet for zone ${each.value.zone}"
+  name           = lookup(each.value, "name", "infra-${var.network_name}-${each.value.zone}:${each.value.v4_cidr_blocks[0]}")
+  description    = lookup(each.value, "description", "${var.network_name} subnet for zone ${each.value.zone}")  
   v4_cidr_blocks = each.value.v4_cidr_blocks
   zone           = each.value.zone
   network_id     = local.vpc_id
@@ -78,7 +84,7 @@ resource "yandex_vpc_gateway" "egress_gateway" {
 
 resource "yandex_vpc_route_table" "public" {
   count      = var.public_subnets == null ? 0 : 1
-  name       = each.value.name #!= "" ? each.value.name : "${var.network_name}-public"
+  name       = "${var.network_name}-public"
   network_id = local.vpc_id
 
   dynamic "static_route" {
@@ -93,7 +99,7 @@ resource "yandex_vpc_route_table" "public" {
 
 resource "yandex_vpc_route_table" "private" {
   count      = var.private_subnets == null ? 0 : 1
-  name       = each.value.name #!= "" ? each.value.name : "${var.network_name}-private"
+  name       = "${var.network_name}-private"
   network_id = local.vpc_id
 
   dynamic "static_route" {
@@ -114,7 +120,7 @@ resource "yandex_vpc_route_table" "private" {
 
 resource "yandex_vpc_route_table" "infra" {
   count      = var.infra_subnets == null ? 0 : 1
-  name       = each.value.name #!= "" ? each.value.name : "${var.network_name}-infra"
+  name       = "${var.network_name}-infra"
   network_id = local.vpc_id
 
   dynamic "static_route" {
